@@ -55,3 +55,17 @@ pub mod hanami {
         Ok(())
     }
 
+    pub fn create_bloom(
+        ctx: Context<CreateBloom>,
+        nonce: u64,
+        amount_a: u64,
+        amount_b: u64,
+        duration_slots: u64,
+    ) -> Result<()> {
+        let _ = nonce;
+        require!(
+            duration_slots >= MIN_BLOOM_SLOTS && duration_slots <= MAX_BLOOM_SLOTS,
+            HanamiError::InvalidDuration
+        );
+        require!(amount_a > 0 && amount_b > 0, HanamiError::InvalidAmount);
+
