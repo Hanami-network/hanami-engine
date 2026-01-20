@@ -177,3 +177,155 @@ pub mod hanami {
         let pool = &mut ctx.accounts.pool;
         require!(pool.total_liquidity > 0, HanamiError::NoLiquidity);
 
+        let fee_bps = pool.fee_bps as u128;
+        let amount_in_128 = amount_in as u128;
+        let fee_amount = amount_in_128
+            .checked_mul(fee_bps)
+            .ok_or(HanamiError::MathOverflow)?
+            / BPS_DENOMINATOR;
+        let amount_in_after_fee = amount_in_128
+            .checked_sub(fee_amount)
+            .ok_or(HanamiError::MathOverflow)?;
+
+        let (reserve_in, reserve_out) = if a_to_b {
+            (pool.reserve_a as u128, pool.reserve_b as u128)
+        } else {
+            (pool.reserve_b as u128, pool.reserve_a as u128)
+        };
+
+        let new_reserve_in_after_fee = reserve_in
+            .checked_add(amount_in_after_fee)
+            .ok_or(HanamiError::MathOverflow)?;
+        let amount_out_128 = reserve_out
+            .checked_mul(amount_in_after_fee)
+            .ok_or(HanamiError::MathOverflow)?
+            / new_reserve_in_after_fee;
+        let amount_out: u64 = amount_out_128
+            .try_into()
+            .map_err(|_| HanamiError::MathOverflow)?;
+        require!(amount_out >= min_out, HanamiError::SlippageExceeded);
+        require!(amount_out < reserve_out as u64, HanamiError::InsufficientLiquidity);
+
+        let (user_src, user_dst, vault_in, vault_out) = if a_to_b {
+            (
+                &ctx.accounts.user_token_a,
+                &ctx.accounts.user_token_b,
+                &ctx.accounts.vault_a,
+                &ctx.accounts.vault_b,
+            )
+        } else {
+            (
+                &ctx.accounts.user_token_b,
+                &ctx.accounts.user_token_a,
+                &ctx.accounts.vault_b,
+                &ctx.accounts.vault_a,
+            )
+        };
+
+        token::transfer(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                Transfer {
+                    from: user_src.to_account_info(),
+                    to: vault_in.to_account_info(),
+                    authority: ctx.accounts.user.to_account_info(),
+                },
+            ),
+            amount_in,
+        )?;
+
+        let token_a_mint = pool.token_a_mint;
+        let token_b_mint = pool.token_b_mint;
+        let pool_bump = pool.bump;
+        let seeds: &[&[u8]] = &[
+            POOL_SEED,
+            token_a_mint.as_ref(),
+            token_b_mint.as_ref(),
+            &[pool_bump],
+        ];
+        let signer_seeds: &[&[&[u8]]] = &[seeds];
+        token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                Transfer {
+                    from: vault_out.to_account_info(),
+                    to: user_dst.to_account_info(),
+                    authority: pool.to_account_info(),
+                },
+                signer_seeds,
+            ),
+            amount_out,
+        )?;
+
+        let amount_in_after_fee_u64: u64 = amount_in_after_fee
+            .try_into()
+            .map_err(|_| HanamiError::MathOverflow)?;
+
+        if a_to_b {
+            pool.reserve_a = pool
+                .reserve_a
+                .checked_add(amount_in_after_fee_u64)
+                .ok_or(HanamiError::MathOverflow)?;
+            pool.reserve_b = pool
+                .reserve_b
+                .checked_sub(amount_out)
+                .ok_or(HanamiError::MathOverflow)?;
+            if pool.total_liquidity > 0 {
+                let add = fee_amount
+                    .checked_shl(64)
+                    .ok_or(HanamiError::MathOverflow)?
+                    / pool.total_liquidity;
+                pool.cumulative_fee_per_share_a = pool
+                    .cumulative_fee_per_share_a
+                    .checked_add(add)
+                    .ok_or(HanamiError::MathOverflow)?;
+            }
+            pool.total_fees_a = pool
+                .total_fees_a
+                .checked_add(fee_amount as u64)
+                .ok_or(HanamiError::MathOverflow)?;
+        } else {
+            pool.reserve_b = pool
+                .reserve_b
+                .checked_add(amount_in_after_fee_u64)
+                .ok_or(HanamiError::MathOverflow)?;
+            pool.reserve_a = pool
+                .reserve_a
+                .checked_sub(amount_out)
+                .ok_or(HanamiError::MathOverflow)?;
+            if pool.total_liquidity > 0 {
+                let add = fee_amount
+                    .checked_shl(64)
+                    .ok_or(HanamiError::MathOverflow)?
+                    / pool.total_liquidity;
+                pool.cumulative_fee_per_share_b = pool
+                    .cumulative_fee_per_share_b
+                    .checked_add(add)
+                    .ok_or(HanamiError::MathOverflow)?;
+            }
+            pool.total_fees_b = pool
+                .total_fees_b
+                .checked_add(fee_amount as u64)
+                .ok_or(HanamiError::MathOverflow)?;
+        }
+
+        emit!(Swapped {
+            pool: pool.key(),
+            amount_in,
+            amount_out,
+            a_to_b,
+            fee: fee_amount as u64,
+        });
+        Ok(())
+    }
+
+    pub fn settle_bloom(ctx: Context<SettleBloomCtx>) -> Result<()> {
+        let clock = Clock::get()?;
+        {
+            let bloom = &ctx.accounts.bloom;
+            require!(!bloom.settled, HanamiError::AlreadySettled);
+            require!(clock.slot >= bloom.end_slot, HanamiError::BloomNotMatured);
+        }
+        execute_settle(ctx, false)
+    }
+
