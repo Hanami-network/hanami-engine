@@ -69,3 +69,111 @@ pub mod hanami {
         );
         require!(amount_a > 0 && amount_b > 0, HanamiError::InvalidAmount);
 
+        let pool = &mut ctx.accounts.pool;
+
+        let liquidity: u128 = if pool.total_liquidity == 0 {
+            let product = (amount_a as u128)
+                .checked_mul(amount_b as u128)
+                .ok_or(HanamiError::MathOverflow)?;
+            isqrt(product)
+        } else {
+            let la = (amount_a as u128)
+                .checked_mul(pool.total_liquidity)
+                .ok_or(HanamiError::MathOverflow)?
+                / (pool.reserve_a as u128);
+            let lb = (amount_b as u128)
+                .checked_mul(pool.total_liquidity)
+                .ok_or(HanamiError::MathOverflow)?
+                / (pool.reserve_b as u128);
+            la.min(lb)
+        };
+        require!(liquidity > 0, HanamiError::InsufficientLiquidity);
+
+        token::transfer(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                Transfer {
+                    from: ctx.accounts.user_token_a.to_account_info(),
+                    to: ctx.accounts.vault_a.to_account_info(),
+                    authority: ctx.accounts.user.to_account_info(),
+                },
+            ),
+            amount_a,
+        )?;
+        token::transfer(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                Transfer {
+                    from: ctx.accounts.user_token_b.to_account_info(),
+                    to: ctx.accounts.vault_b.to_account_info(),
+                    authority: ctx.accounts.user.to_account_info(),
+                },
+            ),
+            amount_b,
+        )?;
+
+        pool.reserve_a = pool
+            .reserve_a
+            .checked_add(amount_a)
+            .ok_or(HanamiError::MathOverflow)?;
+        pool.reserve_b = pool
+            .reserve_b
+            .checked_add(amount_b)
+            .ok_or(HanamiError::MathOverflow)?;
+        pool.total_liquidity = pool
+            .total_liquidity
+            .checked_add(liquidity)
+            .ok_or(HanamiError::MathOverflow)?;
+        pool.active_blooms = pool
+            .active_blooms
+            .checked_add(1)
+            .ok_or(HanamiError::MathOverflow)?;
+
+        let clock = Clock::get()?;
+        let bloom = &mut ctx.accounts.bloom;
+        bloom.owner = ctx.accounts.user.key();
+        bloom.pool = pool.key();
+        bloom.liquidity = liquidity;
+        bloom.start_slot = clock.slot;
+        bloom.end_slot = clock
+            .slot
+            .checked_add(duration_slots)
+            .ok_or(HanamiError::MathOverflow)?;
+        bloom.entry_cumulative_fee_a = pool.cumulative_fee_per_share_a;
+        bloom.entry_cumulative_fee_b = pool.cumulative_fee_per_share_b;
+        bloom.deposited_a = amount_a;
+        bloom.deposited_b = amount_b;
+        bloom.entry_price = if amount_b > 0 {
+            ((amount_a as u128) << 64)
+                .checked_div(amount_b as u128)
+                .unwrap_or(0)
+        } else {
+            0
+        };
+        bloom.settled = false;
+        bloom.nonce = nonce;
+        bloom.bump = ctx.bumps.bloom;
+
+        emit!(BloomCreated {
+            bloom: bloom.key(),
+            owner: bloom.owner,
+            pool: pool.key(),
+            liquidity,
+            start_slot: bloom.start_slot,
+            end_slot: bloom.end_slot,
+            deposited_a: amount_a,
+            deposited_b: amount_b,
+        });
+        Ok(())
+    }
+
+    pub fn swap(
+        ctx: Context<SwapCtx>,
+        amount_in: u64,
+        min_out: u64,
+        a_to_b: bool,
+    ) -> Result<()> {
+        require!(amount_in > 0, HanamiError::InvalidAmount);
+        let pool = &mut ctx.accounts.pool;
+        require!(pool.total_liquidity > 0, HanamiError::NoLiquidity);
+
