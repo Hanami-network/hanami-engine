@@ -329,3 +329,14 @@ pub mod hanami {
         execute_settle(ctx, false)
     }
 
+    pub fn chirigiwa(ctx: Context<SettleBloomCtx>) -> Result<()> {
+        let clock = Clock::get()?;
+        {
+            let bloom = &ctx.accounts.bloom;
+            require!(!bloom.settled, HanamiError::AlreadySettled);
+            require!(clock.slot < bloom.end_slot, HanamiError::AlreadyMatured);
+        }
+        execute_settle(ctx, true)
+    }
+}
+
