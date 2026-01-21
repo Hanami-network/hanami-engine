@@ -340,3 +340,7 @@ pub mod hanami {
     }
 }
 
+fn execute_settle(ctx: Context<SettleBloomCtx>, early: bool) -> Result<()> {
+    let pool = &mut ctx.accounts.pool;
+    let bloom = &mut ctx.accounts.bloom;
+
