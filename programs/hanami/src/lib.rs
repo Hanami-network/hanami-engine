@@ -490,3 +490,8 @@ fn isqrt(n: u128) -> u128 {
     x
 }
 
+#[derive(Accounts)]
+pub struct InitializePool<'info> {
+    #[account(mut)]
+    pub authority: Signer<'info>,
+
