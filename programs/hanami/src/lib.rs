@@ -344,3 +344,149 @@ fn execute_settle(ctx: Context<SettleBloomCtx>, early: bool) -> Result<()> {
     let pool = &mut ctx.accounts.pool;
     let bloom = &mut ctx.accounts.bloom;
 
+    require_keys_eq!(bloom.pool, pool.key(), HanamiError::PoolMismatch);
+    require_keys_eq!(
+        bloom.owner,
+        ctx.accounts.user.key(),
+        HanamiError::Unauthorized
+    );
+
+    let total_liq = pool.total_liquidity;
+    require!(total_liq > 0, HanamiError::NoLiquidity);
+
+    let share_a = (pool.reserve_a as u128)
+        .checked_mul(bloom.liquidity)
+        .ok_or(HanamiError::MathOverflow)?
+        / total_liq;
+    let share_b = (pool.reserve_b as u128)
+        .checked_mul(bloom.liquidity)
+        .ok_or(HanamiError::MathOverflow)?
+        / total_liq;
+
+    let fee_delta_a = pool
+        .cumulative_fee_per_share_a
+        .saturating_sub(bloom.entry_cumulative_fee_a);
+    let fee_delta_b = pool
+        .cumulative_fee_per_share_b
+        .saturating_sub(bloom.entry_cumulative_fee_b);
+    let fees_earned_a = fee_delta_a
+        .checked_mul(bloom.liquidity)
+        .ok_or(HanamiError::MathOverflow)?
+        >> 64;
+    let fees_earned_b = fee_delta_b
+        .checked_mul(bloom.liquidity)
+        .ok_or(HanamiError::MathOverflow)?
+        >> 64;
+
+    let (final_a_u128, final_b_u128, penalty_a, penalty_b) = if early {
+        let principal_a = share_a;
+        let principal_b = share_b;
+        let pa = principal_a
+            .checked_mul(CHIRIGIWA_PENALTY_BPS)
+            .ok_or(HanamiError::MathOverflow)?
+            / BPS_DENOMINATOR;
+        let pb = principal_b
+            .checked_mul(CHIRIGIWA_PENALTY_BPS)
+            .ok_or(HanamiError::MathOverflow)?
+            / BPS_DENOMINATOR;
+        (
+            principal_a.saturating_sub(pa) + fees_earned_a,
+            principal_b.saturating_sub(pb) + fees_earned_b,
+            pa,
+            pb,
+        )
+    } else {
+        (share_a + fees_earned_a, share_b + fees_earned_b, 0, 0)
+    };
+
+    let withdraw_a: u64 = final_a_u128
+        .try_into()
+        .map_err(|_| HanamiError::MathOverflow)?;
+    let withdraw_b: u64 = final_b_u128
+        .try_into()
+        .map_err(|_| HanamiError::MathOverflow)?;
+
+    let reserve_reduction_a = share_a.saturating_sub(penalty_a);
+    let reserve_reduction_b = share_b.saturating_sub(penalty_b);
+
+    pool.reserve_a = (pool.reserve_a as u128)
+        .saturating_sub(reserve_reduction_a) as u64;
+    pool.reserve_b = (pool.reserve_b as u128)
+        .saturating_sub(reserve_reduction_b) as u64;
+    pool.total_liquidity = pool
+        .total_liquidity
+        .checked_sub(bloom.liquidity)
+        .ok_or(HanamiError::MathOverflow)?;
+    pool.active_blooms = pool.active_blooms.saturating_sub(1);
+
+    let token_a_mint = pool.token_a_mint;
+    let token_b_mint = pool.token_b_mint;
+    let pool_bump = pool.bump;
+    let seeds: &[&[u8]] = &[
+        POOL_SEED,
+        token_a_mint.as_ref(),
+        token_b_mint.as_ref(),
+        &[pool_bump],
+    ];
+    let signer_seeds: &[&[&[u8]]] = &[seeds];
+
+    if withdraw_a > 0 {
+        token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                Transfer {
+                    from: ctx.accounts.vault_a.to_account_info(),
+                    to: ctx.accounts.user_token_a.to_account_info(),
+                    authority: pool.to_account_info(),
+                },
+                signer_seeds,
+            ),
+            withdraw_a,
+        )?;
+    }
+    if withdraw_b > 0 {
+        token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                Transfer {
+                    from: ctx.accounts.vault_b.to_account_info(),
+                    to: ctx.accounts.user_token_b.to_account_info(),
+                    authority: pool.to_account_info(),
+                },
+                signer_seeds,
+            ),
+            withdraw_b,
+        )?;
+    }
+
+    bloom.settled = true;
+
+    let clock = Clock::get()?;
+    emit!(BloomSettled {
+        bloom: bloom.key(),
+        owner: bloom.owner,
+        early,
+        withdraw_a,
+        withdraw_b,
+        fees_earned_a: fees_earned_a as u64,
+        fees_earned_b: fees_earned_b as u64,
+        penalty_a: penalty_a as u64,
+        penalty_b: penalty_b as u64,
+        settled_slot: clock.slot,
+    });
+    Ok(())
+}
+
+fn isqrt(n: u128) -> u128 {
+    if n < 2 {
+        return n;
+    }
+    let mut x = n;
+    let mut y = (x + 1) / 2;
+    while y < x {
+        x = y;
+        y = (x + n / x) / 2;
+    }
+    x
+}
+
