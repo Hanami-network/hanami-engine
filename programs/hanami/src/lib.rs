@@ -495,3 +495,46 @@ pub struct InitializePool<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
+    pub token_a_mint: Box<Account<'info, Mint>>,
+    pub token_b_mint: Box<Account<'info, Mint>>,
+
+    #[account(
+        init,
+        payer = authority,
+        space = 8 + Pool::LEN,
+        seeds = [POOL_SEED, token_a_mint.key().as_ref(), token_b_mint.key().as_ref()],
+        bump,
+    )]
+    pub pool: Box<Account<'info, Pool>>,
+
+    #[account(
+        init,
+        payer = authority,
+        token::mint = token_a_mint,
+        token::authority = pool,
+        seeds = [VAULT_A_SEED, pool.key().as_ref()],
+        bump,
+    )]
+    pub vault_a: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        init,
+        payer = authority,
+        token::mint = token_b_mint,
+        token::authority = pool,
+        seeds = [VAULT_B_SEED, pool.key().as_ref()],
+        bump,
+    )]
+    pub vault_b: Box<Account<'info, TokenAccount>>,
+
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
+    pub rent: Sysvar<'info, Rent>,
+}
+
+#[derive(Accounts)]
+#[instruction(nonce: u64, amount_a: u64, amount_b: u64, duration_slots: u64)]
+pub struct CreateBloom<'info> {
+    #[account(mut)]
+    pub user: Signer<'info>,
+
