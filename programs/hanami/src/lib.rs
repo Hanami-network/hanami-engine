@@ -538,3 +538,60 @@ pub struct CreateBloom<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
+    #[account(
+        mut,
+        seeds = [POOL_SEED, pool.token_a_mint.as_ref(), pool.token_b_mint.as_ref()],
+        bump = pool.bump,
+    )]
+    pub pool: Box<Account<'info, Pool>>,
+
+    #[account(
+        mut,
+        seeds = [VAULT_A_SEED, pool.key().as_ref()],
+        bump,
+        constraint = vault_a.key() == pool.vault_a @ HanamiError::InvalidVault,
+    )]
+    pub vault_a: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        mut,
+        seeds = [VAULT_B_SEED, pool.key().as_ref()],
+        bump,
+        constraint = vault_b.key() == pool.vault_b @ HanamiError::InvalidVault,
+    )]
+    pub vault_b: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        mut,
+        constraint = user_token_a.mint == pool.token_a_mint @ HanamiError::InvalidMint,
+        constraint = user_token_a.owner == user.key() @ HanamiError::Unauthorized,
+    )]
+    pub user_token_a: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        mut,
+        constraint = user_token_b.mint == pool.token_b_mint @ HanamiError::InvalidMint,
+        constraint = user_token_b.owner == user.key() @ HanamiError::Unauthorized,
+    )]
+    pub user_token_b: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        init,
+        payer = user,
+        space = 8 + BloomPosition::LEN,
+        seeds = [BLOOM_SEED, pool.key().as_ref(), user.key().as_ref(), &nonce.to_le_bytes()],
+        bump,
+    )]
+    pub bloom: Box<Account<'info, BloomPosition>>,
+
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub system_program: Program<'info, System>,
+    pub rent: Sysvar<'info, Rent>,
+}
+
+#[derive(Accounts)]
+pub struct SwapCtx<'info> {
+    #[account(mut)]
+    pub user: Signer<'info>,
+
