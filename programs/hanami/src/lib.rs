@@ -640,3 +640,68 @@ pub struct SettleBloomCtx<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
+    #[account(
+        mut,
+        seeds = [POOL_SEED, pool.token_a_mint.as_ref(), pool.token_b_mint.as_ref()],
+        bump = pool.bump,
+    )]
+    pub pool: Box<Account<'info, Pool>>,
+
+    #[account(
+        mut,
+        seeds = [VAULT_A_SEED, pool.key().as_ref()],
+        bump,
+        constraint = vault_a.key() == pool.vault_a @ HanamiError::InvalidVault,
+    )]
+    pub vault_a: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        mut,
+        seeds = [VAULT_B_SEED, pool.key().as_ref()],
+        bump,
+        constraint = vault_b.key() == pool.vault_b @ HanamiError::InvalidVault,
+    )]
+    pub vault_b: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        mut,
+        constraint = user_token_a.mint == pool.token_a_mint @ HanamiError::InvalidMint,
+        constraint = user_token_a.owner == user.key() @ HanamiError::Unauthorized,
+    )]
+    pub user_token_a: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        mut,
+        constraint = user_token_b.mint == pool.token_b_mint @ HanamiError::InvalidMint,
+        constraint = user_token_b.owner == user.key() @ HanamiError::Unauthorized,
+    )]
+    pub user_token_b: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        mut,
+        constraint = bloom.owner == user.key() @ HanamiError::Unauthorized,
+        constraint = bloom.pool == pool.key() @ HanamiError::PoolMismatch,
+    )]
+    pub bloom: Box<Account<'info, BloomPosition>>,
+
+    pub token_program: Program<'info, Token>,
+}
+
+#[account]
+pub struct Pool {
+    pub token_a_mint: Pubkey,
+    pub token_b_mint: Pubkey,
+    pub vault_a: Pubkey,
+    pub vault_b: Pubkey,
+    pub reserve_a: u64,
+    pub reserve_b: u64,
+    pub total_liquidity: u128,
+    pub cumulative_fee_per_share_a: u128,
+    pub cumulative_fee_per_share_b: u128,
+    pub total_fees_a: u64,
+    pub total_fees_b: u64,
+    pub active_blooms: u64,
+    pub fee_bps: u16,
+    pub bump: u8,
+}
+
