@@ -705,3 +705,29 @@ pub struct Pool {
     pub bump: u8,
 }
 
+impl Pool {
+    pub const LEN: usize = 32 + 32 + 32 + 32
+        + 8 + 8
+        + 16 + 16 + 16
+        + 8 + 8 + 8
+        + 2 + 1
+        + 32;
+}
+
+#[account]
+pub struct BloomPosition {
+    pub owner: Pubkey,
+    pub pool: Pubkey,
+    pub liquidity: u128,
+    pub start_slot: u64,
+    pub end_slot: u64,
+    pub entry_cumulative_fee_a: u128,
+    pub entry_cumulative_fee_b: u128,
+    pub deposited_a: u64,
+    pub deposited_b: u64,
+    pub entry_price: u128,
+    pub nonce: u64,
+    pub settled: bool,
+    pub bump: u8,
+}
+
