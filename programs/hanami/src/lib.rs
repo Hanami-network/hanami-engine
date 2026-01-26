@@ -731,3 +731,23 @@ pub struct BloomPosition {
     pub bump: u8,
 }
 
+impl BloomPosition {
+    pub const LEN: usize = 32 + 32
+        + 16
+        + 8 + 8
+        + 16 + 16
+        + 8 + 8
+        + 16
+        + 8
+        + 1 + 1
+        + 16;
+}
+
+#[event]
+pub struct PoolInitialized {
+    pub pool: Pubkey,
+    pub token_a: Pubkey,
+    pub token_b: Pubkey,
+    pub fee_bps: u16,
+}
+
