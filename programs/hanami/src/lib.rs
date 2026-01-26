@@ -763,3 +763,12 @@ pub struct BloomCreated {
     pub deposited_b: u64,
 }
 
+#[event]
+pub struct Swapped {
+    pub pool: Pubkey,
+    pub amount_in: u64,
+    pub amount_out: u64,
+    pub a_to_b: bool,
+    pub fee: u64,
+}
+
