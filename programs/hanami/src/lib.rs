@@ -751,3 +751,15 @@ pub struct PoolInitialized {
     pub fee_bps: u16,
 }
 
+#[event]
+pub struct BloomCreated {
+    pub bloom: Pubkey,
+    pub owner: Pubkey,
+    pub pool: Pubkey,
+    pub liquidity: u128,
+    pub start_slot: u64,
+    pub end_slot: u64,
+    pub deposited_a: u64,
+    pub deposited_b: u64,
+}
+
