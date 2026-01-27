@@ -817,4 +817,3 @@ pub enum HanamiError {
     #[msg("Invalid mint")]
     InvalidMint,
 }
-
