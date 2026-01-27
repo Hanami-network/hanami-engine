@@ -772,3 +772,17 @@ pub struct Swapped {
     pub fee: u64,
 }
 
+#[event]
+pub struct BloomSettled {
+    pub bloom: Pubkey,
+    pub owner: Pubkey,
+    pub early: bool,
+    pub withdraw_a: u64,
+    pub withdraw_b: u64,
+    pub fees_earned_a: u64,
+    pub fees_earned_b: u64,
+    pub penalty_a: u64,
+    pub penalty_b: u64,
+    pub settled_slot: u64,
+}
+
