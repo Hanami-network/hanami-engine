@@ -786,3 +786,35 @@ pub struct BloomSettled {
     pub settled_slot: u64,
 }
 
+#[error_code]
+pub enum HanamiError {
+    #[msg("Fee exceeds maximum (10%)")]
+    FeeTooHigh,
+    #[msg("Bloom duration out of allowed range")]
+    InvalidDuration,
+    #[msg("Amount must be greater than zero")]
+    InvalidAmount,
+    #[msg("Liquidity resulting from deposit is zero")]
+    InsufficientLiquidity,
+    #[msg("No liquidity in pool")]
+    NoLiquidity,
+    #[msg("Math overflow")]
+    MathOverflow,
+    #[msg("Slippage exceeded")]
+    SlippageExceeded,
+    #[msg("Bloom has not yet matured")]
+    BloomNotMatured,
+    #[msg("Bloom has already matured (use settle_bloom instead)")]
+    AlreadyMatured,
+    #[msg("Bloom already settled")]
+    AlreadySettled,
+    #[msg("Unauthorized")]
+    Unauthorized,
+    #[msg("Pool mismatch")]
+    PoolMismatch,
+    #[msg("Invalid vault")]
+    InvalidVault,
+    #[msg("Invalid mint")]
+    InvalidMint,
+}
+
