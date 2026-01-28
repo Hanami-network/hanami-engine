@@ -1,0 +1,29 @@
+{
+  "name": "hanami-engine",
+  "version": "0.4.1",
+  "private": true,
+  "scripts": {
+    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
+    "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" --write",
+    "test": "anchor test",
+    "test:skip-build": "anchor test --skip-build",
+    "deploy:devnet": "bash scripts/deploy-devnet.sh",
+    "demo:devnet": "ts-node scripts/demo-devnet.ts"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.31.1",
+    "@solana/spl-token": "^0.4.8",
+    "@solana/web3.js": "^1.95.3"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.5",
+    "@types/chai": "^4.3.16",
+    "@types/mocha": "^10.0.7",
+    "chai": "^4.5.0",
+    "mocha": "^10.7.3",
+    "prettier": "^3.3.3",
+    "ts-mocha": "^10.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  }
+}
