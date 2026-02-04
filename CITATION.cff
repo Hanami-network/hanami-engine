@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+title: HANAMI
+message: "If you reference HANAMI in academic or research work, please cite it."
+type: software
+authors:
+  - name: HANAMI core
+url: https://hanami.network
+repository-code: https://github.com/Hanami-network/hanami-engine
+license: MIT
+version: 0.4.1
+date-released: 2026-04-22
+keywords:
+  - solana
+  - defi
+  - liquidity
+  - amm
+  - anchor
+  - impermanent-loss
