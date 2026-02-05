@@ -1,0 +1,23 @@
+* text=auto eol=lf
+
+*.rs   text eol=lf
+*.ts   text eol=lf
+*.json text eol=lf
+*.toml text eol=lf
+*.md   text eol=lf
+*.sh   text eol=lf
+
+*.png binary
+*.jpg binary
+*.so  binary
+*.mp3 binary
+
+*.ts linguist-language=TypeScript
+*.rs linguist-language=Rust
+
+docs/*           linguist-documentation
+tests/fixtures/* linguist-generated
+idl/*.json       linguist-generated
+sdk/dist/*       linguist-generated
+target/*         linguist-generated
+node_modules/*   linguist-vendored
