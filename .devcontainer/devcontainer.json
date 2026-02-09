@@ -1,0 +1,20 @@
+{
+  "name": "HANAMI Solana / Anchor",
+  "image": "mcr.microsoft.com/devcontainers/rust:latest",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "postCreateCommand": "cargo --version && node --version",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "tamasfe.even-better-toml",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}
