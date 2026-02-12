@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://hanami.network
+    about: Read the protocol docs and architecture overview.
+  - name: Security disclosure
+    url: https://github.com/Hanami-network/hanami-engine/security/policy
+    about: Report a security vulnerability privately.
