@@ -28,4 +28,34 @@ HANAMI is a time-bounded LP primitive on Solana. Each position blooms on deposit
 | Time-bounded LP positions (bloom)        | stable |
 | Permissionless settle at end_slot        | stable |
 | Chirigiwa early exit (5% penalty)        | stable |
+| Constant-product swap with bps fee       | stable |
+| Cumulative-fee-per-share accumulator     | stable |
+| Late-entrant fee isolation               | stable |
+| Anchor 0.31 / Rust 1.95 toolchain        | stable |
+| TypeScript SDK                           | stable |
+| Rust CLI                                 | beta   |
+| Devnet integration test                  | beta   |
+| MagicBlock ephemeral rollup integration  | alpha  |
+
+## Architecture
+
+```mermaid
+flowchart LR
+  user([user]) -->|create_bloom| bloom[BloomPosition PDA]
+  bloom -->|deposits| vault_a[Vault A PDA]
+  bloom -->|deposits| vault_b[Vault B PDA]
+  trader([trader]) -->|swap| pool[Pool PDA]
+  pool -->|fees accrue| accumulator((cumulative_fee_per_share))
+  accumulator -->|delta * shares| bloom
+  bloom -->|settle_bloom or chirigiwa| user
+```
+
+Pool PDA seeds: `["pool", token_a_mint, token_b_mint]`. The mint pair is canonical (lexicographically ascending) so there is exactly one pool per token pair.
+
+## Build
+
+```bash
+git clone https://github.com/Hanami-network/hanami-engine.git
+cd hanami-engine
+anchor build
 
