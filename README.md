@@ -58,4 +58,34 @@ Pool PDA seeds: `["pool", token_a_mint, token_b_mint]`. The mint pair is canonic
 git clone https://github.com/Hanami-network/hanami-engine.git
 cd hanami-engine
 anchor build
+anchor test --skip-build
+```
+
+## Quick start
+
+```ts
+import { Connection, Keypair } from "@solana/web3.js";
+import { HanamiClient, derivePoolPda } from "@hanami/sdk";
+import BN from "bn.js";
+
+const connection = new Connection("https://api.devnet.solana.com");
+const wallet = Keypair.fromSecretKey(/* ... */);
+const client = new HanamiClient({ connection, wallet });
+
+const [pool] = derivePoolPda(tokenA, tokenB);
+const { bloom } = await client.createBloom({
+  pool,
+  amountA: new BN(1_000_000),
+  amountB: new BN(1_000_000),
+  durationSlots: new BN(2_400),
+});
+// { signature: '...', bloom: PublicKey('...') }
+```
+
+```rust
+pub fn create_bloom(
+    ctx: Context<CreateBloom>,
+    nonce: u64,
+    amount_a: u64,
+    amount_b: u64,
 
