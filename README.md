@@ -88,4 +88,34 @@ pub fn create_bloom(
     nonce: u64,
     amount_a: u64,
     amount_b: u64,
+    duration_slots: u64,
+) -> Result<()>;
+```
+
+```bash
+hanami-cli bloom \
+  --pool <POOL_PUBKEY> \
+  --amount-a 1000000 \
+  --amount-b 1000000 \
+  --duration-slots 100
+```
+
+## Project structure
+
+```
+hanami-engine/
+├── programs/hanami/src/lib.rs        initialize_pool, create_bloom, swap, settle_bloom, chirigiwa
+├── sdk/src/                          client.ts, pda.ts, types.ts, errors.ts, utils.ts
+├── cli/src/                          main.rs, commands.rs, config.rs, pda.rs
+├── tests/                            hanami.ts, fee-isolation.ts
+├── docs/                             architecture.md, instructions.md, economics.md, security.md
+├── examples/                         01-create-pool.ts, 02-bloom-lifecycle.ts, 03-chirigiwa.ts
+├── idl/hanami.json                   anchor IDL
+└── .github/workflows/                ci.yml, release.yml
+```
+
+## Numbers
+
+| Metric                  | Value | Source                                 |
+|-------------------------|-------|----------------------------------------|
 
