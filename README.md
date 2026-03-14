@@ -118,4 +118,34 @@ hanami-engine/
 
 | Metric                  | Value | Source                                 |
 |-------------------------|-------|----------------------------------------|
+| IL reduction (1d bloom) | 73%   | Backtest vs Uniswap V2 full-range LP   |
+| Rebalance latency       | 10 ms | MagicBlock ephemeral rollup            |
+| Block finality          | 400 ms| Solana mainnet                         |
+| Tests passing           | 14/14 | tests/hanami.ts + tests/fee-isolation  |
+| Program size            | 371 KB| target/deploy/hanami.so (release)      |
 
+## Deployments
+
+Cluster: `solana-devnet` · stage: `pre-deployment`
+
+Program ID: `BeGzo6j9d6YPXXq93Y5mrnnGCyKPoVh2qQFD8Frnrsrn`
+
+Explorer: https://explorer.solana.com/address/BeGzo6j9d6YPXXq93Y5mrnnGCyKPoVh2qQFD8Frnrsrn?cluster=devnet
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+
+For security issues, follow the disclosure policy in [SECURITY.md](SECURITY.md).
+
+## License
+
+[MIT](LICENSE).
+
+## Links
+
+- Website:    https://hanami.network
+- X:          @hanami_fi
+- Repo:       Hanami-network/hanami-engine
+- Program ID: BeGzo6j9d6YPXXq93Y5mrnnGCyKPoVh2qQFD8Frnrsrn
+- Cluster:    solana-devnet
