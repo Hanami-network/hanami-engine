@@ -39,3 +39,11 @@ Semantic Versioning.
 - `BloomPosition` now carries a `nonce` so the same owner can hold multiple
   blooms in the same pool
 
+## [0.3.0] - 2026-03-30
+
+### Added
+
+- `swap` instruction with constant-product math and basis-point fee
+- Pool reserve tracking decoupled from cumulative fee tracking
+- Initial integration test suite (pool init, deposit, swap, settle)
+
