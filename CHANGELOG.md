@@ -22,3 +22,20 @@ Semantic Versioning.
 - Tightened the integration test for fee isolation to compare cumulative
   fee snapshots at the byte level
 
+## [0.4.0] - 2026-04-12
+
+### Added
+
+- `chirigiwa()` instruction for early bloom exit at a fixed 5% principal
+  penalty, with the penalty redistributed to remaining LPs
+- Per-bloom entry snapshot of the cumulative fee accumulator so late
+  entrants do not inherit pre-entry fees
+- Permissionless `settle_bloom` after `end_slot`
+
+### Changed
+
+- Pool PDA seeds now derive from the canonical token A / token B mint pair
+  ordering to avoid double-pool ambiguity
+- `BloomPosition` now carries a `nonce` so the same owner can hold multiple
+  blooms in the same pool
+
