@@ -47,3 +47,11 @@ Semantic Versioning.
 - Pool reserve tracking decoupled from cumulative fee tracking
 - Initial integration test suite (pool init, deposit, swap, settle)
 
+## [0.2.0] - 2026-03-12
+
+### Added
+
+- `create_bloom` instruction with sqrt-based liquidity minting and
+  pro-rata follow-on deposits
+- Integer square root helper for u128 inputs
+
