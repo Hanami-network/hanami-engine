@@ -55,3 +55,10 @@ Semantic Versioning.
   pro-rata follow-on deposits
 - Integer square root helper for u128 inputs
 
+## [0.1.0] - 2026-02-24
+
+### Added
+
+- Initial Anchor scaffold for the HANAMI program
+- `Pool` and `BloomPosition` account layouts
+- `initialize_pool` instruction
