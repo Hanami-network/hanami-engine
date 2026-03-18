@@ -16,4 +16,12 @@ publish dated commitments for unfinished work.
 - [x] Anchor 0.31.1 / Rust 1.95 toolchain alignment
 - [x] Boxed account references to fit BPF stack frame limit
 - [x] Integration suite covering pool init, swap, fee isolation, settle,
-
+      chirigiwa, double-settle rejection
+- [x] TypeScript SDK with `HanamiClient`, PDA derivation helpers,
+      typed errors, and unit tests
+- [x] Rust CLI with `init-pool`, `bloom`, `swap`, `settle`, `chirigiwa`,
+      `info` subcommands
+- [x] IDL JSON published in `idl/`
+- [x] CI workflow (rustfmt, cargo check, gitleaks)
+- [x] Reproducible Docker build
+- [x] devnet demo script for end-to-end manual verification
