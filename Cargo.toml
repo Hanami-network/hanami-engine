@@ -1,3 +1,37 @@
 [workspace]
-members = []
+members = ["programs/*", "cli"]
 resolver = "2"
+
+[workspace.package]
+version = "0.4.1"
+edition = "2021"
+authors = ["HANAMI core"]
+license = "MIT"
+repository = "https://github.com/Hanami-network/hanami-engine"
+homepage = "https://hanami.network"
+readme = "README.md"
+rust-version = "1.78"
+description = "Time-bounded liquidity primitive on Solana with bounded impermanent loss."
+keywords = ["solana", "anchor", "defi", "liquidity"]
+categories = ["cryptography", "network-programming"]
+
+[workspace.dependencies]
+anchor-lang = "0.31.1"
+anchor-spl = "0.31.1"
+borsh = "1.5"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+tokio = { version = "1.39", features = ["full"] }
+clap = { version = "4.5", features = ["derive"] }
+
+[profile.release]
+overflow-checks = true
+lto = "fat"
+codegen-units = 1
+opt-level = 3
+
+[profile.release.build-override]
+opt-level = 3
+incremental = false
+codegen-units = 1
