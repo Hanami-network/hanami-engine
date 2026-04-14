@@ -163,4 +163,169 @@ describe("hanami", () => {
       await program.methods
         .initializePool(5000)
         .accounts({
+          authority: payer.publicKey,
+          tokenAMint: badMintPair[0],
+          tokenBMint: badMintPair[1],
+          pool: badPool,
+          vaultA: badVaultA,
+          vaultB: badVaultB,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+          rent: SYSVAR_RENT_PUBKEY,
+        })
+        .rpc();
+      assert.fail("should have thrown on fee > 1000 bps");
+    } catch (e: any) {
+      expect(String(e)).to.match(/FeeTooHigh|0x1770|6000/);
+    }
+  });
+
+  it("alice creates first bloom (genesis liquidity)", async () => {
+    const nonce = new BN(1);
+    const amountA = new BN(100_000 * UNIT);
+    const amountB = new BN(100_000 * UNIT);
+    const durationSlots = new BN(40);
+
+    const bloom = bloomPda(poolPda, alice.publicKey, nonce);
+
+    await program.methods
+      .createBloom(nonce, amountA, amountB, durationSlots)
+      .accounts({
+        user: alice.publicKey,
+        pool: poolPda,
+        vaultA,
+        vaultB,
+        userTokenA: aliceAtaA,
+        userTokenB: aliceAtaB,
+        bloom,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY,
+      })
+      .signers([alice])
+      .rpc();
+
+    const pool = await program.account.pool.fetch(poolPda);
+    const bl = await program.account.bloomPosition.fetch(bloom);
+
+    expect(pool.reserveA.toString()).to.equal(amountA.toString());
+    expect(pool.reserveB.toString()).to.equal(amountB.toString());
+    expect(pool.totalLiquidity.toString()).to.equal(
+      isqrtBN(amountA.mul(amountB)).toString(),
+    );
+    expect(bl.owner.toBase58()).to.equal(alice.publicKey.toBase58());
+    expect(bl.settled).to.equal(false);
+    expect(bl.depositedA.toString()).to.equal(amountA.toString());
+    expect(bl.depositedB.toString()).to.equal(amountB.toString());
+    expect(bl.endSlot.sub(bl.startSlot).toString()).to.equal(durationSlots.toString());
+  });
+
+  it("rejects duration below minimum", async () => {
+    const nonce = new BN(99);
+    const amountA = new BN(10 * UNIT);
+    const amountB = new BN(10 * UNIT);
+    const badDuration = new BN(5);
+    const bloom = bloomPda(poolPda, alice.publicKey, nonce);
+
+    try {
+      await program.methods
+        .createBloom(nonce, amountA, amountB, badDuration)
+        .accounts({
+          user: alice.publicKey,
+          pool: poolPda,
+          vaultA,
+          vaultB,
+          userTokenA: aliceAtaA,
+          userTokenB: aliceAtaB,
+          bloom,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+          rent: SYSVAR_RENT_PUBKEY,
+        })
+        .signers([alice])
+        .rpc();
+      assert.fail("should have rejected short duration");
+    } catch (e: any) {
+      expect(String(e)).to.match(/InvalidDuration|0x1771|6001/);
+    }
+  });
+
+  it("trader swaps A->B, fees accumulate", async () => {
+    const amountIn = new BN(10_000 * UNIT);
+    const beforePool = await program.account.pool.fetch(poolPda);
+
+    await program.methods
+      .swap(amountIn, new BN(0), true)
+      .accounts({
+        user: trader.publicKey,
+        pool: poolPda,
+        vaultA,
+        vaultB,
+        userTokenA: traderAtaA,
+        userTokenB: traderAtaB,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .signers([trader])
+      .rpc();
+
+    const afterPool = await program.account.pool.fetch(poolPda);
+    expect(afterPool.reserveA.gt(beforePool.reserveA)).to.equal(true);
+    expect(afterPool.reserveB.lt(beforePool.reserveB)).to.equal(true);
+    expect(afterPool.totalFeesA.gt(beforePool.totalFeesA)).to.equal(true);
+
+    const expectedFee = amountIn.mul(new BN(FEE_BPS)).div(new BN(10_000));
+    expect(afterPool.totalFeesA.toString()).to.equal(expectedFee.toString());
+  });
+
+  it("trader swaps B->A in opposite direction", async () => {
+    const amountIn = new BN(5_000 * UNIT);
+    const beforePool = await program.account.pool.fetch(poolPda);
+
+    await program.methods
+      .swap(amountIn, new BN(0), false)
+      .accounts({
+        user: trader.publicKey,
+        pool: poolPda,
+        vaultA,
+        vaultB,
+        userTokenA: traderAtaA,
+        userTokenB: traderAtaB,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .signers([trader])
+      .rpc();
+
+    const afterPool = await program.account.pool.fetch(poolPda);
+    expect(afterPool.reserveB.gt(beforePool.reserveB)).to.equal(true);
+    expect(afterPool.reserveA.lt(beforePool.reserveA)).to.equal(true);
+    expect(afterPool.totalFeesB.gt(beforePool.totalFeesB)).to.equal(true);
+  });
+
+  it("bob creates second bloom alongside alice", async () => {
+    const nonce = new BN(1);
+    const amountA = new BN(50_000 * UNIT);
+    const amountB = new BN(50_000 * UNIT);
+    const durationSlots = new BN(30);
+
+    const bloom = bloomPda(poolPda, bob.publicKey, nonce);
+
+    await program.methods
+      .createBloom(nonce, amountA, amountB, durationSlots)
+      .accounts({
+        user: bob.publicKey,
+        pool: poolPda,
+        vaultA,
+        vaultB,
+        userTokenA: bobAtaA,
+        userTokenB: bobAtaB,
+        bloom,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY,
+      })
+      .signers([bob])
+      .rpc();
 });
