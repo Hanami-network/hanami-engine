@@ -328,4 +328,169 @@ describe("hanami", () => {
       })
       .signers([bob])
       .rpc();
+
+    const bl = await program.account.bloomPosition.fetch(bloom);
+    expect(bl.owner.toBase58()).to.equal(bob.publicKey.toBase58());
+  });
+
+  it("rejects settle before maturity", async () => {
+    const nonce = new BN(1);
+    const bloom = bloomPda(poolPda, alice.publicKey, nonce);
+
+    try {
+      await program.methods
+        .settleBloom()
+        .accounts({
+          user: alice.publicKey,
+          pool: poolPda,
+          vaultA,
+          vaultB,
+          userTokenA: aliceAtaA,
+          userTokenB: aliceAtaB,
+          bloom,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .signers([alice])
+        .rpc();
+      assert.fail("should have blocked early settle");
+    } catch (e: any) {
+      expect(String(e)).to.match(/BloomNotMatured|0x1777|6007/);
+    }
+  });
+
+  it("bob chirigiwa (early unbloom with 5% penalty)", async () => {
+    const nonce = new BN(1);
+    const bloom = bloomPda(poolPda, bob.publicKey, nonce);
+
+    const blBefore = await program.account.bloomPosition.fetch(bloom);
+    const bobABefore = Number((await getAccount(connection, bobAtaA)).amount);
+    const bobBBefore = Number((await getAccount(connection, bobAtaB)).amount);
+
+    await program.methods
+      .chirigiwa()
+      .accounts({
+        user: bob.publicKey,
+        pool: poolPda,
+        vaultA,
+        vaultB,
+        userTokenA: bobAtaA,
+        userTokenB: bobAtaB,
+        bloom,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .signers([bob])
+      .rpc();
+
+    const blAfter = await program.account.bloomPosition.fetch(bloom);
+    const bobAAfter = Number((await getAccount(connection, bobAtaA)).amount);
+    const bobBAfter = Number((await getAccount(connection, bobAtaB)).amount);
+
+    expect(blAfter.settled).to.equal(true);
+
+    const deltaA = bobAAfter - bobABefore;
+    const deltaB = bobBAfter - bobBBefore;
+
+    const depositA = blBefore.depositedA.toNumber();
+    const depositB = blBefore.depositedB.toNumber();
+
+    expect(deltaA).to.be.gt(0);
+    expect(deltaB).to.be.gt(0);
+    expect(deltaA + deltaB).to.be.lt(depositA + depositB);
+    expect(deltaA + deltaB).to.be.gte((depositA + depositB) * 0.85);
+
+    console.log("    bob withdraw A:", deltaA / UNIT);
+    console.log("    bob withdraw B:", deltaB / UNIT);
+    console.log("    bob deposit A :", depositA / UNIT);
+    console.log("    bob deposit B :", depositB / UNIT);
+    console.log("    total penalty %:", (1 - (deltaA + deltaB) / (depositA + depositB)) * 100);
+  });
+
+  it("alice settles after maturity, receives principal + fees", async () => {
+    const nonce = new BN(1);
+    const bloom = bloomPda(poolPda, alice.publicKey, nonce);
+
+    const blBefore = await program.account.bloomPosition.fetch(bloom);
+    await waitForSlot(blBefore.endSlot.toNumber() + 1);
+
+    const aliceABefore = Number((await getAccount(connection, aliceAtaA)).amount);
+    const aliceBBefore = Number((await getAccount(connection, aliceAtaB)).amount);
+
+    await program.methods
+      .settleBloom()
+      .accounts({
+        user: alice.publicKey,
+        pool: poolPda,
+        vaultA,
+        vaultB,
+        userTokenA: aliceAtaA,
+        userTokenB: aliceAtaB,
+        bloom,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .signers([alice])
+      .rpc();
+
+    const blAfter = await program.account.bloomPosition.fetch(bloom);
+    const aliceAAfter = Number((await getAccount(connection, aliceAtaA)).amount);
+    const aliceBAfter = Number((await getAccount(connection, aliceAtaB)).amount);
+
+    expect(blAfter.settled).to.equal(true);
+
+    const deltaA = aliceAAfter - aliceABefore;
+    const deltaB = aliceBAfter - aliceBBefore;
+
+    expect(deltaA).to.be.gt(0);
+    expect(deltaB).to.be.gt(0);
+
+    console.log("    alice withdraw A:", deltaA / UNIT);
+    console.log("    alice withdraw B:", deltaB / UNIT);
+    console.log("    alice deposited A:", blBefore.depositedA.toNumber() / UNIT);
+    console.log("    alice deposited B:", blBefore.depositedB.toNumber() / UNIT);
+  });
+
+  it("rejects double settle", async () => {
+    const nonce = new BN(1);
+    const bloom = bloomPda(poolPda, alice.publicKey, nonce);
+
+    try {
+      await program.methods
+        .settleBloom()
+        .accounts({
+          user: alice.publicKey,
+          pool: poolPda,
+          vaultA,
+          vaultB,
+          userTokenA: aliceAtaA,
+          userTokenB: aliceAtaB,
+          bloom,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .signers([alice])
+        .rpc();
+      assert.fail("should have blocked double settle");
+    } catch (e: any) {
+      expect(String(e)).to.match(/AlreadySettled|AlreadyMatured|0x1779|6008|6009/);
+    }
+  });
+
+  it("benchmarks IL vs hypothetical permanent LP", async () => {
+    const pool = await program.account.pool.fetch(poolPda);
+    console.log("    final reserveA:", pool.reserveA.toNumber() / UNIT);
+    console.log("    final reserveB:", pool.reserveB.toNumber() / UNIT);
+    console.log("    total fees A:", pool.totalFeesA.toNumber() / UNIT);
+    console.log("    total fees B:", pool.totalFeesB.toNumber() / UNIT);
+    console.log("    active blooms remaining:", pool.activeBlooms.toNumber());
+    expect(pool.activeBlooms.toNumber()).to.equal(0);
+  });
 });
+
+function isqrtBN(n: BN): BN {
+  if (n.ltn(2)) return n;
+  let x = n;
+  let y = n.addn(1).divn(2);
+  while (y.lt(x)) {
+    x = y;
+    y = x.add(n.div(x)).divn(2);
+  }
+  return x;
+}
