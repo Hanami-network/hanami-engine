@@ -14,7 +14,7 @@
   <img src="https://img.shields.io/badge/contributors-1-ff4d8d?style=flat-square" alt="Contributors"/>
   <img src="https://img.shields.io/badge/issues-0-ff4d8d?style=flat-square" alt="Issues"/>
   <img src="https://img.shields.io/badge/stars-0-ff4d8d?style=flat-square" alt="Stars"/>
-  <a href="https://x.com/hanami_fi"><img src="https://img.shields.io/badge/twitter-%40hanami__fi-d4a574?style=flat-square" alt="Twitter"/></a>
+  <a href="https://x.com/hanaminetwork"><img src="https://img.shields.io/badge/twitter-%40hanaminetwork-d4a574?style=flat-square" alt="Twitter"/></a>
   <a href="https://hanami.network"><img src="https://img.shields.io/badge/website-hanami.network-ff4d8d?style=flat-square" alt="Website"/></a>
   <img src="https://img.shields.io/badge/anchor-0.31.1-d4a574?style=flat-square" alt="Anchor"/>
 </p>
@@ -145,7 +145,7 @@ For security issues, follow the disclosure policy in [SECURITY.md](SECURITY.md).
 ## Links
 
 - Website:    https://hanami.network
-- X:          @hanami_fi
+- X:          @hanaminetwork
 - Repo:       Hanami-network/hanami-engine
 - Program ID: BeGzo6j9d6YPXXq93Y5mrnnGCyKPoVh2qQFD8Frnrsrn
 - Cluster:    solana-devnet
