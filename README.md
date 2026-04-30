@@ -19,6 +19,9 @@
   <img src="https://img.shields.io/badge/anchor-0.31.1-d4a574?style=flat-square" alt="Anchor"/>
 </p>
 
+
+CA: A2AeTCJn8w2AMPCg3iSiHMKJbADpEbXUURDG4XJpump
+
 HANAMI is a time-bounded LP primitive on Solana. Each position blooms on deposit, accrues swap fees during a fixed bloom window, and falls (auto-settles) at end_slot. Impermanent loss is bounded by design because the position cannot survive past its declared horizon. Early exit is permitted via chirigiwa with a principal penalty that redistributes to the remaining bloomed liquidity.
 
 ## Features
