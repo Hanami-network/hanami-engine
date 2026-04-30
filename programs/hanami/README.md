@@ -32,4 +32,4 @@ anchor test --skip-build
 
 ## Program id
 
-`BeGzo6j9d6YPXXq93Y5mrnnGCyKPoVh2qQFD8Frnrsrn`
+Pre-deployment. The on-chain program is not yet published; the canonical address is declared in `src/lib.rs` via `declare_id!()` and surfaces in the IDL at build time.

@@ -126,11 +126,7 @@ hanami-engine/
 
 ## Deployments
 
-Cluster: `solana-devnet` · stage: `pre-deployment`
-
-Program ID: `BeGzo6j9d6YPXXq93Y5mrnnGCyKPoVh2qQFD8Frnrsrn`
-
-Explorer: https://explorer.solana.com/address/BeGzo6j9d6YPXXq93Y5mrnnGCyKPoVh2qQFD8Frnrsrn?cluster=devnet
+Pre-deployment. No live program address is published. Anyone presenting a contract address as HANAMI is impersonating the project.
 
 ## Contributing
 
