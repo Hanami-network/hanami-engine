@@ -144,8 +144,7 @@ For security issues, follow the disclosure policy in [SECURITY.md](SECURITY.md).
 
 ## Links
 
-Website: https://hanami.network
-X: @hanaminetwork
-Repo: Hanami-network/hanami-engine
-Program ID: BeGzo6j9d6YPXXq93Y5mrnnGCyKPoVh2qQFD8Frnrsrn
-Cluster: solana-devnet
+- Website: [hanami.network](https://hanami.network)
+- X: [@hanaminetwork](https://x.com/hanaminetwork)
+- Repo: [Hanami-network/hanami-engine](https://github.com/Hanami-network/hanami-engine)
+- Ticker: `$HANAMI`
