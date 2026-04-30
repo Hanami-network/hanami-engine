@@ -127,9 +127,16 @@ hanami-engine/
 | Tests passing           | 14/14 | tests/hanami.ts + tests/fee-isolation  |
 | Program size            | 371 KB| target/deploy/hanami.so (release)      |
 
-## Deployments
+## Token
 
-Pre-deployment. No live program address is published. Anyone presenting a contract address as HANAMI is impersonating the project.
+| Field    | Value                                                          |
+|----------|----------------------------------------------------------------|
+| Ticker   | `$HANAMI`                                                      |
+| CA       | `A2AeTCJn8w2AMPCg3iSiHMKJbADpEbXUURDG4XJpump`                   |
+| Network  | `solana-mainnet`                                               |
+| Launchpad| pump.fun                                                       |
+
+Trade: [pump.fun](https://pump.fun/coin/A2AeTCJn8w2AMPCg3iSiHMKJbADpEbXUURDG4XJpump) · [DexScreener](https://dexscreener.com/solana/A2AeTCJn8w2AMPCg3iSiHMKJbADpEbXUURDG4XJpump) · [Birdeye](https://birdeye.so/token/A2AeTCJn8w2AMPCg3iSiHMKJbADpEbXUURDG4XJpump?chain=solana) · [Solscan](https://solscan.io/token/A2AeTCJn8w2AMPCg3iSiHMKJbADpEbXUURDG4XJpump)
 
 ## Contributing
 
