@@ -1,4 +1,4 @@
-export const PROGRAM_ID_STR = "BeGzo6j9d6YPXXq93Y5mrnnGCyKPoVh2qQFD8Frnrsrn";
+export const PROGRAM_ID_STR = "4YZuozjXWMmZTd1a35NyKQVYi9BoJJMr1L2aasTT9GQf";
 
 export const POOL_SEED = Buffer.from("pool");
 export const VAULT_A_SEED = Buffer.from("vault_a");

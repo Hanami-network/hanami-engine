@@ -11,7 +11,7 @@ use anchor_spl::{
     token::{self, Mint, Token, TokenAccount, Transfer},
 };
 
-declare_id!("BeGzo6j9d6YPXXq93Y5mrnnGCyKPoVh2qQFD8Frnrsrn");
+declare_id!("4YZuozjXWMmZTd1a35NyKQVYi9BoJJMr1L2aasTT9GQf");
 
 pub const POOL_SEED: &[u8] = b"pool";
 pub const VAULT_A_SEED: &[u8] = b"vault_a";

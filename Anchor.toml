@@ -6,13 +6,13 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-hanami = "BeGzo6j9d6YPXXq93Y5mrnnGCyKPoVh2qQFD8Frnrsrn"
+hanami = "4YZuozjXWMmZTd1a35NyKQVYi9BoJJMr1L2aasTT9GQf"
 
 [programs.devnet]
-hanami = "BeGzo6j9d6YPXXq93Y5mrnnGCyKPoVh2qQFD8Frnrsrn"
+hanami = "4YZuozjXWMmZTd1a35NyKQVYi9BoJJMr1L2aasTT9GQf"
 
 [programs.mainnet]
-hanami = "BeGzo6j9d6YPXXq93Y5mrnnGCyKPoVh2qQFD8Frnrsrn"
+hanami = "4YZuozjXWMmZTd1a35NyKQVYi9BoJJMr1L2aasTT9GQf"
 
 [registry]
 url = "https://api.apr.dev"
@@ -25,7 +25,7 @@ wallet = "~/.config/solana/id.json"
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 
 [test]
-startup_wait = 5000
+startup_wait = 30000
 shutdown_wait = 2000
 
 [test.validator]

@@ -23,7 +23,7 @@ struct Cli {
     #[arg(long, env = "HANAMI_KEYPAIR_PATH", default_value = "~/.config/solana/id.json")]
     keypair: String,
 
-    #[arg(long, env = "HANAMI_PROGRAM_ID", default_value = "BeGzo6j9d6YPXXq93Y5mrnnGCyKPoVh2qQFD8Frnrsrn")]
+    #[arg(long, env = "HANAMI_PROGRAM_ID", default_value = "4YZuozjXWMmZTd1a35NyKQVYi9BoJJMr1L2aasTT9GQf")]
     program_id: String,
 
     #[arg(long, default_value = "confirmed")]
